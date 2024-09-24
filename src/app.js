@@ -1,20 +1,28 @@
 const express = require("express");
 const app = express();
-const { authAdmin, authUser } = require("./MiddleWares/auth");
+const connectDB = require("./config/database");
+const User = require("./models/user");
 
-app.use("/admin", authAdmin);
-app.get("/admin", (req, res) => {
-  res.send("Hello Admin");
-});
-app.post("/admin", (req, res) => {
-  res.send("Hello Admin Post");
-});
-app.use("/user", authUser, (req, res) => {
-  throw new Error("Error");
-  res.status(500).send("some error occured");
-});
-app.use("/", (req, res, next) => {
-  res.end("Hello from Server");
+app.post("/signup", async (req, res) => {
+  const userData = new User({
+    firstName: "Niketa",
+    lastName: "Sikarwar",
+    emailId: "nik.niketa@gmail.com",
+    password: "Admin@123",
+  });
+  try {
+    await userData.save();
+    res.send("User Added Successfully");
+  } catch (err) {
+    res.status(400).send("Bad Request: ");
+  }
 });
 
-app.listen(8000, () => console.log("Server is running on port 8000"));
+connectDB()
+  .then(() => {
+    console.log("database successfully connected");
+    app.listen(8000, () => console.log("Server is running on port 8000"));
+  })
+  .catch((err) => {
+    console.log(err);
+  });
