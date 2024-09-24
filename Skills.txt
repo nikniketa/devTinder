@@ -1,3 +1,7 @@
 Express
 MiddleWare
 Error Handling
+mongoose npm library
+Mongoose Schema
+Mongoose Model
+Post API request to add user.
