@@ -5,3 +5,6 @@ mongoose npm library
 Mongoose Schema
 Mongoose Model
 Post API request to add user.
+Mongoose ScemaValidation
+Validator npm library for email and password validation
+define Updatable field 
