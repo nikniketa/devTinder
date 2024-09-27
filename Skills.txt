@@ -8,3 +8,6 @@ Post API request to add user.
 Mongoose ScemaValidation
 Validator npm library for email and password validation
 define Updatable field 
+Login API
+password encrypt by bcrypt library
+req.body validation

@@ -3,19 +3,50 @@ const app = express();
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const validator = require("validator");
+const signupValidation = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 app.post("/signup", async (req, res) => {
-  const data = req.body;
-  const userData = new User(data);
   try {
-    if (data?.skill.length > 10) {
-      throw new Error("UpdateOnly 10 skills allowed");
-    }
+    signupValidation(req);
+    const { firstName, lastName, emailId, password, age, gender } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+    const userData = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+      age,
+      gender,
+    });
     await userData.save();
     res.send("User Added Successfully");
   } catch (err) {
     res.status(400).send("Bad Request: " + err.message);
+  }
+});
+app.get("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId) || emailId === "") {
+      throw new Error("Invalid EmailId");
+    }
+    const user = await User.findOne({ emailId: emailId });
+    console.log(user.password);
+    if (!user) {
+      throw new Error("User is not valid");
+    } else {
+      const passwordMatch = await bcrypt.compare(password, user.password);
+
+      if (passwordMatch) {
+        res.send("Login successfull " + user.firstName);
+      } else {
+        throw new Error("Invalid credential");
+      }
+    }
+  } catch (err) {
+    res.status(400).send("Login Error: " + err.message);
   }
 });
 app.get("/user", async (req, res) => {
@@ -52,8 +83,9 @@ app.delete("/user", async (req, res) => {
   }
 });
 app.patch("/user/:userId", async (req, res) => {
-  const data = req.body;
+  const { firstName, lastName, password, about, skill, photoURL } = req.body;
   try {
+    const passwordHash = await bcrypt.hash(password, 10);
     const forUpdate = [
       "firstName",
       "lastName",
@@ -62,16 +94,23 @@ app.patch("/user/:userId", async (req, res) => {
       "skill",
       "photoURL",
     ];
-    const isFieldUpdatable = Object.keys(data).every((x) =>
+    const isFieldUpdatable = Object.keys(req.body).every((x) =>
       forUpdate.includes(x)
     );
-    if (data?.skill.length > 10) {
-      throw new Error("UpdateOnly 10 skills allowed");
-    }
+    // if (data?.skill.length > 10) {
+    //   throw new Error("UpdateOnly 10 skills allowed");
+    // }
     if (isFieldUpdatable) {
       const user = await User.findByIdAndUpdate(
         { _id: req.params.userId },
-        data,
+        {
+          firstName,
+          lastName,
+          password: passwordHash,
+          about,
+          skill,
+          photoURL,
+        },
         {
           runValidators: true,
         }
