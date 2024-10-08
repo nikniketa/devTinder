@@ -5,8 +5,12 @@ const User = require("./models/user");
 const validator = require("validator");
 const signupValidation = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
+
 app.post("/signup", async (req, res) => {
   try {
     signupValidation(req);
@@ -33,13 +37,14 @@ app.get("/login", async (req, res) => {
       throw new Error("Invalid EmailId");
     }
     const user = await User.findOne({ emailId: emailId });
-    console.log(user.password);
     if (!user) {
       throw new Error("User is not valid");
     } else {
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (passwordMatch) {
+        const token = await jwt.sign({ _id: user._id }, "Niketa@#123");
+        res.cookie("token", token);
         res.send("Login successfull " + user.firstName);
       } else {
         throw new Error("Invalid credential");
@@ -48,6 +53,14 @@ app.get("/login", async (req, res) => {
   } catch (err) {
     res.status(400).send("Login Error: " + err.message);
   }
+});
+app.get("/profile", async (req, res) => {
+  const cookies = req.cookies;
+  const { token } = cookies;
+  const verifyToken = jwt.verify(token, "Niketa@#123");
+  const userData = await User.findById(verifyToken._id);
+
+  res.send(userData);
 });
 app.get("/user", async (req, res) => {
   const data = req.body.emailId;
