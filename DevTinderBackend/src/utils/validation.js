@@ -1,5 +1,18 @@
 const validator = require("validator");
-
+const isValidEditableField = (req) => {
+  const editableField = [
+    "firstName",
+    "lastName",
+    "age",
+    "gender",
+    "about",
+    "skill",
+  ];
+  const requestField = req.body;
+  return Object.keys(requestField).every((field) =>
+    editableField.includes(field),
+  );
+};
 const signupValidation = (req) => {
   const { firstName, lastName, emailId, password, age } = req.body;
   if (firstName === "" || firstName.length < 2 || firstName.length > 25) {
@@ -18,4 +31,4 @@ const signupValidation = (req) => {
     throw new Error("Age should be greater than 18 years");
   }
 };
-module.exports = signupValidation;
+module.exports = { signupValidation, isValidEditableField };

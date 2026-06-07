@@ -1,26 +1,23 @@
-const authAdmin = (req, res, next) => {
-  console.log("Admin authorization processing");
-
-  const token = "xyz";
-  const isAdminAuthorized = token === "xyz";
-  if (!isAdminAuthorized) {
-    res.status(401).send("Unauthorized access");
-  } else {
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const userAuth = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("User is not LoggedIn");
+    }
+    const decodeobj = await jwt.verify(token, "Niketa@#123");
+    const { _id } = decodeobj;
+    const user = await User.findById({ _id: _id });
+    if (!user) {
+      throw new Error("Not valid User");
+    }
+    req.user = user;
     next();
-  }
-};
-const authUser = (req, res, next) => {
-  console.log("User authorization processing");
-
-  const token = "xyz";
-  const isAdminAuthorized = token === "xyz";
-  if (!isAdminAuthorized) {
-    res.status(401).send("Unauthorized User access");
-  } else {
-    next();
+  } catch (err) {
+    res.send(err.message);
   }
 };
 module.exports = {
-  authAdmin,
-  authUser,
+  userAuth,
 };
